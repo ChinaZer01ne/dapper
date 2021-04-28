@@ -1,7 +1,7 @@
 package com.dapper;
 
 import com.dapper.core.ApplicationContext;
-import com.dapper.core.ServletWebServerApplicationContext;
+import com.dapper.web.ServletWebServerApplicationContext;
 
 /**
  * 这个类可以用来启动一个Dapper应用程序
@@ -18,7 +18,6 @@ public class DapperApplication {
         // 初始化IOC
         ApplicationContext context = createApplicationContext();
         context.refresh();
-        // DI
         return context;
     }
 
