@@ -2,12 +2,11 @@ package com.dapper.core;
 
 import com.dapper.beans.BeanDefinition;
 import com.dapper.beans.BeanDefinitionHolder;
+import com.dapper.context.annotation.Configuration;
+import com.dapper.web.BeanDefinitionLoader;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 上下文环境
@@ -16,21 +15,52 @@ import java.util.Set;
  */
 public class ApplicationContext {
 
+    private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
     private Map<String, Object> instanceMap = new HashMap<>();
 
-    private ComponentScanner componentScanner = new ComponentScanner();
+    private ComponentScanner componentScanner;
+    /**
+     * 资源加载器
+     */
+    private BeanDefinitionLoader beanDefinitionLoader;
+
+    public ApplicationContext() {
+        componentScanner = new ComponentScanner();
+        beanDefinitionLoader = new BeanDefinitionLoader();
+    }
     /**
      * 初始化容器
      * @return void
      * @throws
      */
     public void refresh() {
+        // 从配置类获取所有需要扫描路径
+        processConfigBeanDefinitions();
         // 实例化所有的Bean
         initBeans();
         // 创建web服务
         onRefresh();
         // 启动web服务
         finishRefresh();
+    }
+
+    /**
+     * 处理配置类，获取需要扫描的包路径
+     * @return void
+     * @throws
+     */
+    private void processConfigBeanDefinitions() {
+        List<BeanDefinitionHolder> configCandidateNames = new ArrayList<>();
+        Set<String> candidateNames = beanDefinitionMap.keySet();
+        for (String candidateName : candidateNames) {
+            BeanDefinition beanDefinition = beanDefinitionMap.get(candidateName);
+            Class<?> clazz = beanDefinition.getClazz();
+            if (clazz.getAnnotation(Configuration.class) != null) {
+                configCandidateNames.add(new BeanDefinitionHolder(beanDefinition, candidateName));
+            }
+        }
+        // 需要读取候选的配置类，然后扫描包 TODO
+
     }
 
     protected void finishRefresh() {
@@ -47,6 +77,7 @@ public class ApplicationContext {
         // 反射获取实例对象
         for (BeanDefinitionHolder beanDefinitionHolder : beanDefinitionHolders) {
             instanceMap.put(beanDefinitionHolder.getBeanName(), reflectObtain(beanDefinitionHolder.getBeanDefinition()));
+            beanDefinitionMap.put(beanDefinitionHolder.getBeanName(), beanDefinitionHolder.getBeanDefinition());
         }
     }
 
@@ -73,5 +104,18 @@ public class ApplicationContext {
             e.printStackTrace();
         }
         throw new RuntimeException("类型不能为空！");
+    }
+
+    /**
+     * 向容器中加载资源
+     * @param sourceClasses :
+     * @return void
+     * @throws
+     */
+    public void load(Collection<Class<?>> sourceClasses) {
+        List<BeanDefinition> beanDefinitions = beanDefinitionLoader.load(sourceClasses);
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+            instanceMap.put(beanDefinition.getBeanName(), beanDefinition);
+        }
     }
 }
