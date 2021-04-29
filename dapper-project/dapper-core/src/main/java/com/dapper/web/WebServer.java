@@ -17,4 +17,10 @@ public interface WebServer {
      * @throws
      */
     void shutdown();
+    /**
+     * 端口
+     * @return void
+     * @throws
+     */
+    int getPort();
 }

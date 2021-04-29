@@ -3,5 +3,4 @@ include 'dapper-project:dapper-core'
 include 'dapper-project:dapper-parent'
 include 'dapper-tests'
 include 'dapper-project:dapper-dependencies'
-findProject(':dapper-project:dapper-dependencies')?.name = 'dapper-dependencies'
 
