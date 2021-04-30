@@ -2,20 +2,22 @@ package com.dapper.core;
 
 import com.dapper.beans.BeanDefinition;
 import com.dapper.beans.BeanDefinitionHolder;
+import com.dapper.context.annotation.ComponentScan;
 import com.dapper.context.annotation.Configuration;
 import com.dapper.web.BeanDefinitionLoader;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 上下文环境
  * @author peach
  * @since 2021/4/28 0:03
  */
-public class ApplicationContext {
+public abstract class ApplicationContext {
 
-    private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
+    protected Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
     private Map<String, Object> instanceMap = new HashMap<>();
 
     private ComponentScanner componentScanner;
@@ -49,19 +51,7 @@ public class ApplicationContext {
      * @return void
      * @throws
      */
-    private void processConfigBeanDefinitions() {
-        List<BeanDefinitionHolder> configCandidateNames = new ArrayList<>();
-        Set<String> candidateNames = beanDefinitionMap.keySet();
-        for (String candidateName : candidateNames) {
-            BeanDefinition beanDefinition = beanDefinitionMap.get(candidateName);
-            Class<?> clazz = beanDefinition.getClazz();
-            if (clazz.getAnnotation(Configuration.class) != null) {
-                configCandidateNames.add(new BeanDefinitionHolder(beanDefinition, candidateName));
-            }
-        }
-        // 需要读取候选的配置类，然后扫描包 TODO
-
-    }
+    protected abstract void processConfigBeanDefinitions();
 
     protected void finishRefresh() {
 
@@ -115,7 +105,7 @@ public class ApplicationContext {
     public void load(Collection<Class<?>> sourceClasses) {
         List<BeanDefinition> beanDefinitions = beanDefinitionLoader.load(sourceClasses);
         for (BeanDefinition beanDefinition : beanDefinitions) {
-            instanceMap.put(beanDefinition.getBeanName(), beanDefinition);
+            beanDefinitionMap.put(beanDefinition.getBeanName(), beanDefinition);
         }
     }
 }
